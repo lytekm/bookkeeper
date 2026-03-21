@@ -52,7 +52,7 @@ export const TransactionTable = ({
               <td>{formatCurrency(tx.runningBalance)}</td>
               <td>
                 <div className={styles.suggestionCell}>
-                  <span>{getAccountName(suggested)}</span>
+                  <span>{getAccountName(suggested, accounts)}</span>
                   {!assigned && suggested ? (
                     <button
                       type="button"
