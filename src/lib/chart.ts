@@ -18,5 +18,5 @@ export const chartOfAccounts: Account[] = [
   { id: "uncategorized", name: "Uncategorized", type: "Expense" },
 ];
 
-export const getAccountName = (accountId: string) =>
-  chartOfAccounts.find((account) => account.id === accountId)?.name ?? accountId;
+export const getAccountName = (accountId: string, accounts: Account[] = chartOfAccounts) =>
+  accounts.find((account) => account.id === accountId)?.name ?? accountId;

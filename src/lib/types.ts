@@ -44,4 +44,5 @@ export type DemoState = {
   csvText: string;
   mapping: ColumnMapping;
   assignments: Record<string, string>;
+  customAccounts?: Account[];
 };
