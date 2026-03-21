@@ -1,0 +1,13 @@
+Date,Description,Debit,Credit,Balance
+2026-01-02,Opening deposit - Owner,,5000.00,5000.00
+2026-01-03,Rent - January,1800.00,,3200.00
+2026-01-05,Stripe Payout 9241,,2450.50,5650.50
+2026-01-06,Office Depot,123.45,,5527.05
+2026-01-08,Gusto Payroll,2200.00,,3327.05
+2026-01-10,AWS Hosting,320.19,,3006.86
+2026-01-12,Bank Fee,15.00,,2991.86
+2026-01-15,Client Payment - Acme,,1800.00,4791.86
+2026-01-18,Uber Trip,42.70,,4749.16
+2026-01-20,IRS Estimated Tax,650.00,,4099.16
+2026-01-22,Interest Earned,,3.25,4102.41
+2026-01-25,Adobe Subscription,59.99,,4042.42
