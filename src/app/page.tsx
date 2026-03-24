@@ -194,28 +194,134 @@ export default function Home() {
     handleAssign(id, accountId);
   };
 
+  const formatCurrency = (value: number | null | undefined) => {
+    if (value == null || Number.isNaN(value)) return "";
+    const abs = Math.abs(value).toLocaleString("en-CA", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+    return value < 0 ? `-$${abs}` : `$${abs}`;
+  };
+
   const handleExport = () => {
-    if (!transactions.length) {
-      return;
-    }
-    const rows = transactions.map((tx) => {
-      const assigned = assignments[tx.id];
-      return {
-        Check: "",
+    if (!transactions.length) return;
+
+    const exportAccounts = allAccounts.filter(
+      (account) => account.name !== "Business Checking",
+    );
+
+    const accountColumns = exportAccounts.map((account) => account.name);
+
+    const headers = [
+      "Date",
+      "Description",
+      "Transaction",
+      "Bank Balance",
+      ...accountColumns,
+      "Check",
+    ];
+
+    const rows: Record<string, string>[] = [];
+
+    const firstTx = transactions[0];
+    const openingBalance = firstTx.runningBalance - firstTx.amount;
+
+    rows.push({
+      Date: "",
+      Description: "",
+      Transaction: "",
+      "Bank Balance": formatCurrency(openingBalance),
+      ...Object.fromEntries(accountColumns.map((name) => [name, ""])),
+      Check: "",
+    });
+
+    for (const tx of transactions) {
+      const assignedId = assignments[tx.id];
+      const assignedName = assignedId
+        ? getAccountName(assignedId, allAccounts)
+        : null;
+
+      const offsetAmount = assignedName ? -tx.amount : 0;
+
+      const row: Record<string, string> = {
         Date: tx.date,
         Description: tx.description,
-        Amount: tx.amount,
-        "Running Balance": tx.runningBalance,
-        Category: assigned
-          ? getAccountName(assigned, allAccounts)
-          : "Unassigned",
+        Transaction: formatCurrency(tx.amount),
+        "Bank Balance": formatCurrency(tx.runningBalance),
+        ...Object.fromEntries(accountColumns.map((name) => [name, ""])),
+        Check: "",
       };
+
+      if (assignedName && accountColumns.includes(assignedName)) {
+        row[assignedName] = formatCurrency(offsetAmount);
+      }
+
+      const checkValue = tx.amount + offsetAmount;
+      row["Check"] = formatCurrency(checkValue);
+
+      rows.push(row);
+    }
+
+    rows.push({
+      Date: "",
+      Description: "",
+      Transaction: "",
+      "Bank Balance": "",
+      ...Object.fromEntries(accountColumns.map((name) => [name, ""])),
+      Check: "",
     });
-    const worksheet = utils.json_to_sheet(rows);
+
+    const totalsByAccount = Object.fromEntries(
+      accountColumns.map((name) => [name, 0]),
+    ) as Record<string, number>;
+
+    for (const tx of transactions) {
+      const assignedId = assignments[tx.id];
+      const assignedName = assignedId
+        ? getAccountName(assignedId, allAccounts)
+        : null;
+
+      if (assignedName && assignedName in totalsByAccount) {
+        totalsByAccount[assignedName] += -tx.amount;
+      }
+    }
+
+    const finalBalance = transactions[transactions.length - 1].runningBalance;
+    const totalTransaction = transactions.reduce(
+      (sum, tx) => sum + tx.amount,
+      0,
+    );
+    const totalOffsets = Object.values(totalsByAccount).reduce(
+      (sum, value) => sum + value,
+      0,
+    );
+    const totalCheck = totalTransaction + totalOffsets;
+
+    rows.push({
+      Date: "",
+      Description: "",
+      Transaction: formatCurrency(totalTransaction),
+      "Bank Balance": formatCurrency(finalBalance),
+      ...Object.fromEntries(
+        accountColumns.map((name) => [
+          name,
+          formatCurrency(totalsByAccount[name]),
+        ]),
+      ),
+      Check: formatCurrency(totalCheck),
+    });
+
+    const worksheet = utils.json_to_sheet(rows, {
+      header: headers,
+      skipHeader: false,
+    });
+
     const workbook = utils.book_new();
     utils.book_append_sheet(workbook, worksheet, "Transactions");
+
     const dateStamp = new Date().toISOString().slice(0, 10);
-    writeFile(workbook, `bookkeeping-transactions-${dateStamp}.xlsx`);
+    writeFile(workbook, `bookkeeping-schedule-${dateStamp}.xlsx`);
   };
 
   useEffect(() => {
