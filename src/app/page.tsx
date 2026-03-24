@@ -1,10 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { utils, writeFile } from "xlsx";
 import styles from "./page.module.css";
 import { parseCsv } from "../lib/csv";
 import { autoDetectMapping } from "../lib/mapping";
-import { normalizeTransactions, summarizeTransactions } from "../lib/accounting";
+import {
+  normalizeTransactions,
+  summarizeTransactions,
+} from "../lib/accounting";
 import { chartOfAccounts, BANK_ACCOUNT_ID, getAccountName } from "../lib/chart";
 import { clearState, loadState, saveState } from "../lib/storage";
 import { formatCurrency } from "../lib/format";
@@ -23,9 +27,17 @@ export default function Home() {
   const [assignments, setAssignments] = useState<Record<string, string>>({});
   const [customAccounts, setCustomAccounts] = useState<Account[]>([]);
   const [activePanel, setActivePanel] = useState<
-    "overview" | "upload" | "mapping" | "preview" | "transactions" | "journal" | "analytics"
+    | "overview"
+    | "upload"
+    | "mapping"
+    | "preview"
+    | "transactions"
+    | "journal"
+    | "analytics"
   >("overview");
-  const [newCategoryDrafts, setNewCategoryDrafts] = useState<Record<string, string>>({});
+  const [newCategoryDrafts, setNewCategoryDrafts] = useState<
+    Record<string, string>
+  >({});
   const [suggestionsApplied, setSuggestionsApplied] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
@@ -40,7 +52,11 @@ export default function Home() {
     setHydrated(true);
   }, []);
 
-  const parsed = useMemo(() => (csvText ? parseCsv(csvText) : { headers: [], rows: [], sampleRows: [] }), [csvText]);
+  const parsed = useMemo(
+    () =>
+      csvText ? parseCsv(csvText) : { headers: [], rows: [], sampleRows: [] },
+    [csvText],
+  );
 
   useEffect(() => {
     if (!parsed.headers.length || Object.keys(mapping).length > 0) {
@@ -112,9 +128,16 @@ export default function Home() {
     setSuggestionsApplied(false);
   };
 
-  const allAccounts = useMemo(() => [...chartOfAccounts, ...customAccounts], [customAccounts]);
-  const selectableAccounts = allAccounts.filter((account) => account.id !== BANK_ACCOUNT_ID);
-  const assignableAccounts = selectableAccounts.filter((account) => account.id !== "uncategorized");
+  const allAccounts = useMemo(
+    () => [...chartOfAccounts, ...customAccounts],
+    [customAccounts],
+  );
+  const selectableAccounts = allAccounts.filter(
+    (account) => account.id !== BANK_ACCOUNT_ID,
+  );
+  const assignableAccounts = selectableAccounts.filter(
+    (account) => account.id !== "uncategorized",
+  );
   const totalsByAccount = Object.entries(summary.totalsByAccount)
     .map(([accountId, total]) => ({
       accountId,
@@ -133,7 +156,8 @@ export default function Home() {
 
   const assignedCount = transactions.length - uncategorizedTransactions.length;
   const hasData = parsed.headers.length > 0;
-  const showUncategorized = suggestionsApplied || Object.keys(assignments).length > 0;
+  const showUncategorized =
+    suggestionsApplied || Object.keys(assignments).length > 0;
 
   const createAccountId = (name: string) => {
     const base = name
@@ -162,9 +186,36 @@ export default function Home() {
       return;
     }
     const accountId = createAccountId(name);
-    setCustomAccounts((prev) => [...prev, { id: accountId, name, type: "Expense" }]);
+    setCustomAccounts((prev) => [
+      ...prev,
+      { id: accountId, name, type: "Expense" },
+    ]);
     setNewCategoryDrafts((prev) => ({ ...prev, [id]: "" }));
     handleAssign(id, accountId);
+  };
+
+  const handleExport = () => {
+    if (!transactions.length) {
+      return;
+    }
+    const rows = transactions.map((tx) => {
+      const assigned = assignments[tx.id];
+      return {
+        Check: "",
+        Date: tx.date,
+        Description: tx.description,
+        Amount: tx.amount,
+        "Running Balance": tx.runningBalance,
+        Category: assigned
+          ? getAccountName(assigned, allAccounts)
+          : "Unassigned",
+      };
+    });
+    const worksheet = utils.json_to_sheet(rows);
+    const workbook = utils.book_new();
+    utils.book_append_sheet(workbook, worksheet, "Transactions");
+    const dateStamp = new Date().toISOString().slice(0, 10);
+    writeFile(workbook, `bookkeeping-transactions-${dateStamp}.xlsx`);
   };
 
   useEffect(() => {
@@ -236,8 +287,9 @@ export default function Home() {
           <span className={styles.badge}>Bookkeeping Prototype</span>
           <h1>Statement intake, clean mapping, and journal-ready reviews.</h1>
           <p>
-            Upload a bank CSV, map the columns, and review normalized transactions with suggested
-            accounts. Built for quick demos and accountant-ready workflows.
+            Upload a bank CSV, map the columns, and review normalized
+            transactions with suggested accounts. Built for quick demos and
+            accountant-ready workflows.
           </p>
         </div>
         <div className={styles.heroCard}>
@@ -282,11 +334,16 @@ export default function Home() {
               {!hasData ? (
                 <section className={styles.emptyState}>
                   <h3>No data yet</h3>
-                  <p>Upload a CSV or load the demo file to see the full workflow.</p>
+                  <p>
+                    Upload a CSV or load the demo file to see the full workflow.
+                  </p>
                 </section>
               ) : (
                 <>
-                  <SummaryCards summary={summary} transactionCount={transactions.length} />
+                  <SummaryCards
+                    summary={summary}
+                    transactionCount={transactions.length}
+                  />
                   <div className={styles.overviewGrid}>
                     <div className={styles.overviewCard}>
                       <span>Assigned</span>
@@ -350,7 +407,10 @@ export default function Home() {
                 description="Check the first few rows before normalizing transactions."
               />
               {hasData ? (
-                <CsvPreviewTable headers={parsed.headers} rows={parsed.sampleRows} />
+                <CsvPreviewTable
+                  headers={parsed.headers}
+                  rows={parsed.sampleRows}
+                />
               ) : (
                 <section className={styles.emptyState}>
                   <h3>Waiting on data</h3>
@@ -365,10 +425,23 @@ export default function Home() {
               <SectionHeader
                 title="Review transactions"
                 description="Apply suggestions, then finalize remaining categories."
+                action={
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    onClick={handleExport}
+                    disabled={!transactions.length}
+                  >
+                    Export Excel
+                  </button>
+                }
               />
               {hasData ? (
                 <>
-                  <SummaryCards summary={summary} transactionCount={transactions.length} />
+                  <SummaryCards
+                    summary={summary}
+                    transactionCount={transactions.length}
+                  />
                   <TransactionTable
                     transactions={transactions}
                     assignments={assignments}
@@ -381,7 +454,10 @@ export default function Home() {
                     <div className={styles.uncatHeader}>
                       <div>
                         <h3>Uncategorized queue</h3>
-                        <p>Focus on the items still missing a category after suggestions.</p>
+                        <p>
+                          Focus on the items still missing a category after
+                          suggestions.
+                        </p>
                       </div>
                       <span className={styles.navBadge}>
                         {uncategorizedTransactions.length} remaining
@@ -389,7 +465,8 @@ export default function Home() {
                     </div>
                     {!showUncategorized ? (
                       <p className={styles.uncatEmpty}>
-                        Apply suggestions to surface items that need manual categories.
+                        Apply suggestions to surface items that need manual
+                        categories.
                       </p>
                     ) : uncategorizedTransactions.length ? (
                       <div className={styles.uncatList}>
@@ -398,7 +475,13 @@ export default function Home() {
                             <div className={styles.uncatMeta}>
                               <span>{tx.date}</span>
                               <strong>{tx.description}</strong>
-                              <span className={tx.amount >= 0 ? styles.amountIn : styles.amountOut}>
+                              <span
+                                className={
+                                  tx.amount >= 0
+                                    ? styles.amountIn
+                                    : styles.amountOut
+                                }
+                              >
                                 {formatCurrency(tx.amount)}
                               </span>
                             </div>
@@ -406,7 +489,9 @@ export default function Home() {
                               <select
                                 className={styles.select}
                                 value={assignments[tx.id] ?? ""}
-                                onChange={(event) => handleAssign(tx.id, event.target.value)}
+                                onChange={(event) =>
+                                  handleAssign(tx.id, event.target.value)
+                                }
                               >
                                 <option value="">Select category</option>
                                 {assignableAccounts.map((account) => (
@@ -420,7 +505,9 @@ export default function Home() {
                                 type="text"
                                 placeholder="New category"
                                 value={newCategoryDrafts[tx.id] ?? ""}
-                                onChange={(event) => handleDraftChange(tx.id, event.target.value)}
+                                onChange={(event) =>
+                                  handleDraftChange(tx.id, event.target.value)
+                                }
                               />
                               <button
                                 type="button"
@@ -434,7 +521,9 @@ export default function Home() {
                         ))}
                       </div>
                     ) : (
-                      <p className={styles.uncatEmpty}>All transactions are categorized.</p>
+                      <p className={styles.uncatEmpty}>
+                        All transactions are categorized.
+                      </p>
                     )}
                   </div>
                 </>
@@ -498,8 +587,9 @@ export default function Home() {
                   <div className={styles.summaryPanel}>
                     <h3>Notes</h3>
                     <p>
-                      Suggestions are keyword-based and meant for quick triage. Adjust mappings or
-                      account selections as needed before exporting to your accounting system.
+                      Suggestions are keyword-based and meant for quick triage.
+                      Adjust mappings or account selections as needed before
+                      exporting to your accounting system.
                     </p>
                   </div>
                 </div>

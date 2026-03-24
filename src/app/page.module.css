@@ -251,6 +251,11 @@
   border-color: var(--border);
 }
 
+.secondaryButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .ghostButton {
   background: transparent;
   border-color: var(--border);
