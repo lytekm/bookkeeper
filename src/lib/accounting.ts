@@ -81,13 +81,17 @@ const resolveAmount = (
   debitIndex: number,
   creditIndex: number,
 ) => {
+  const debit = debitIndex >= 0 ? toNumber(row[debitIndex]) ?? 0 : 0;
+  const credit = creditIndex >= 0 ? toNumber(row[creditIndex]) ?? 0 : 0;
+  if (debitIndex >= 0 || creditIndex >= 0) {
+    return credit - debit;
+  }
+
   if (amountIndex >= 0) {
     return toNumber(row[amountIndex]) ?? 0;
   }
 
-  const debit = debitIndex >= 0 ? toNumber(row[debitIndex]) ?? 0 : 0;
-  const credit = creditIndex >= 0 ? toNumber(row[creditIndex]) ?? 0 : 0;
-  return credit - debit;
+  return 0;
 };
 
 const normalizeDate = (value: string) => {
