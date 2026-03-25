@@ -341,7 +341,7 @@ export default function Home() {
     {
       id: "upload",
       title: "Upload statement",
-      description: "Load a CSV to start the workflow.",
+      description: "Load a CSV or text-based PDF to start the workflow.",
       badge: hasData ? "Loaded" : "Required",
       disabled: false,
     },
@@ -393,15 +393,15 @@ export default function Home() {
           <span className={styles.badge}>Bookkeeping Prototype</span>
           <h1>Statement intake, clean mapping, and journal-ready reviews.</h1>
           <p>
-            Upload a bank CSV, map the columns, and review normalized
-            transactions with suggested accounts. Built for quick demos and
-            accountant-ready workflows.
+            Upload a bank CSV or text-based PDF, map the columns, and review
+            normalized transactions with suggested accounts. Built for quick
+            demos and accountant-ready workflows.
           </p>
         </div>
         <div className={styles.heroCard}>
           <h3>Workflow snapshot</h3>
           <ul>
-            <li>Upload a CSV statement</li>
+            <li>Upload a CSV or PDF statement</li>
             <li>Auto-map columns and preview</li>
             <li>Assign accounts with suggestions</li>
             <li>Review balanced journal entries</li>
@@ -441,7 +441,8 @@ export default function Home() {
                 <section className={styles.emptyState}>
                   <h3>No data yet</h3>
                   <p>
-                    Upload a CSV or load the demo file to see the full workflow.
+                    Upload a CSV or text-based PDF or load the demo file to see
+                    the full workflow.
                   </p>
                 </section>
               ) : (
@@ -473,7 +474,7 @@ export default function Home() {
             <div className={styles.detailStack}>
               <SectionHeader
                 title="Upload statement"
-                description="CSV only. Data stays in your browser."
+                description="CSV or text-based PDF. Data stays in your browser."
               />
               <CsvUploader
                 onCsvText={setCsvText}
@@ -500,7 +501,10 @@ export default function Home() {
               ) : (
                 <section className={styles.emptyState}>
                   <h3>Waiting on data</h3>
-                  <p>Upload a CSV to configure the column mapping.</p>
+                  <p>
+                    Upload a CSV or text-based PDF to configure the column
+                    mapping.
+                  </p>
                 </section>
               )}
             </div>
@@ -520,7 +524,7 @@ export default function Home() {
               ) : (
                 <section className={styles.emptyState}>
                   <h3>Waiting on data</h3>
-                  <p>Upload a CSV to preview parsed rows.</p>
+                  <p>Upload a CSV or text-based PDF to preview parsed rows.</p>
                 </section>
               )}
             </div>
@@ -636,7 +640,7 @@ export default function Home() {
               ) : (
                 <section className={styles.emptyState}>
                   <h3>Waiting on data</h3>
-                  <p>Upload a CSV to review transactions.</p>
+                  <p>Upload a CSV or text-based PDF to review transactions.</p>
                 </section>
               )}
             </div>
@@ -661,7 +665,9 @@ export default function Home() {
               ) : (
                 <section className={styles.emptyState}>
                   <h3>Waiting on data</h3>
-                  <p>Upload a CSV to preview journal entries.</p>
+                  <p>
+                    Upload a CSV or text-based PDF to preview journal entries.
+                  </p>
                 </section>
               )}
             </div>
@@ -702,7 +708,9 @@ export default function Home() {
               ) : (
                 <section className={styles.emptyState}>
                   <h3>Waiting on data</h3>
-                  <p>Upload a CSV to view summary analytics.</p>
+                  <p>
+                    Upload a CSV or text-based PDF to view summary analytics.
+                  </p>
                 </section>
               )}
             </div>
