@@ -30,4 +30,4 @@ Use the "Load demo data" button or upload `public/demo-bank-statement.csv`.
 - `public/demo-bank-statement.csv` sample statement
 
 ## Deploy
-This is ready for Vercel. Push the repo and deploy with the default Next.js settings.
+This project is available on Vercel at https://bookkeeper-omega-seven.vercel.app
